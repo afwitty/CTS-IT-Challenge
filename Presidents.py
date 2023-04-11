@@ -16,6 +16,7 @@ class Reader:
             print("File not found. Please check the file path and try again.")
 
     def add_variables(self, df):
+        # Appropriately format the listed dates in the .csv file, as June and July are not part of the %b format.
         df['BIRTH_DATE_FORMATTED'] = df['BIRTH DATE'].apply(lambda x: pd.to_datetime(x, format="%b %d, %Y").strftime('%B %d, %Y') if isinstance(x, str) and x.split()[0] not in ['June', 'July'] else x)
         df['DEATH_DATE_FORMATTED'] = df['DEATH DATE'].apply(lambda x: pd.to_datetime(x, format="%b %d, %Y").strftime('%B %d, %Y') if isinstance(x, str) and x.split()[0] not in ['June', 'July'] else x)
         return df
@@ -25,12 +26,14 @@ class Writer:
         self.df = df
 
     def add_variables(self):
+        # The 4 forementioned variables
         self.df['YEAR_OF_BIRTH'] = pd.to_datetime(self.df['BIRTH_DATE_FORMATTED'], format="%B %d, %Y").dt.year
         self.df['LIVED_YEARS'] = (pd.to_datetime(self.df['DEATH_DATE_FORMATTED'], format="%B %d, %Y") - pd.to_datetime(self.df['BIRTH_DATE_FORMATTED'], format="%B %d, %Y")).dt.days / 365.25
         self.df['LIVED_MONTHS'] = (pd.to_datetime(self.df['DEATH_DATE_FORMATTED'], format="%B %d, %Y") - pd.to_datetime(self.df['BIRTH_DATE_FORMATTED'], format="%B %d, %Y")).dt.days / 30.4375
         self.df['LIVED_DAYS'] = (pd.to_datetime(self.df['DEATH_DATE_FORMATTED'], format="%B %d, %Y") - pd.to_datetime(self.df['BIRTH_DATE_FORMATTED'], format="%B %d, %Y")).dt.days
 
     def write_statistics(self):
+        # Set the statistical variables
         lived_days = self.df['LIVED_DAYS']
         mean = lived_days.mean()
         weighted_average = ((self.df['LIVED_DAYS'] * self.df['LIVED_YEARS']).sum()) / self.df['LIVED_YEARS'].sum()
@@ -40,13 +43,13 @@ class Writer:
         min_val = lived_days.min()
         std_dev = lived_days.std() 
 
+        # Write them
         print(f"{'='*50}")
         print(f"{'Statistics for Lived Days':^50}")
         print(f"{'='*50}")
         print(f"Mean: {mean:,.0f}")
         print(f"Weighted Average: {weighted_average:,.0f}")
         print(f"Median: {median:,.0f}")
-        # print(f"Mode: {mode:,.0f}")
         if isinstance(mode, list):
             print(f"Mode(s): {', '.join(str(m) for m in mode)}")
         else:
@@ -76,6 +79,7 @@ class Writer:
         print("Top 10 presidents from shortest lived to longest lived:")
         print(shortest_lived[['PRESIDENT', 'YEAR_OF_BIRTH', 'LIVED_YEARS', 'LIVED_MONTHS', 'LIVED_DAYS']])
 
+# I made my own mode as Pandas .mode() returns duplicate Series if there are no repeated values
 def my_mode(arr):
     counts = {}
     for i in arr:
